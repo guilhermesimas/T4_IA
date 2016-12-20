@@ -7,5 +7,6 @@ public enum ActionEnum {
 	virar_esquerda,
 	astar_safe,
 	coletar_ouros,
-	pegar_powerup
+	pegar_powerup,
+	atacar
 }

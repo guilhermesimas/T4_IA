@@ -16,11 +16,26 @@ public class GameAI
     private static final int lim_X = 59;
     private static final int lim_Y = 34;
 	private static final int HealthyThreshold = 70;
+	private static final int MAX_TIME = 50;
     
     // Maquina de estados
     Boolean searchingGold = true;
+    Boolean colectingGold = false;
+    Boolean atack = false;
     Boolean alert = false;
     Boolean healthy = true;
+    Boolean goldInLine = false;
+    Boolean guardingSpace = false;
+	private boolean standingInPowerUp;
+	private boolean shootedRecently=false;
+	
+	// Controle
+	
+	ArrayList<Gold> ourosConhecidos = new ArrayList<>();
+	private ArrayList<Gold> toCollect = new ArrayList<>();
+	private int timeToGold = 0;
+	private boolean gold = false;
+	private int countAttack = 0;
     
     // Initialization Block
     {
@@ -145,7 +160,7 @@ public class GameAI
      */
     public void GetObservations(List<String> o)
     {
-    	System.out.println("OBSERVA");
+//    	System.out.println("OBSERVA");
     	
     	Consult.setvisitado(player.x,player.y);
     	
@@ -153,6 +168,7 @@ public class GameAI
     		Position p = NextPosition();
     		Consult.setblocked(p.x,p.y);
     		System.out.println("---------------BLOCKED");
+    		
     	}
     	
     	if(o.contains("blueLight")){
@@ -176,10 +192,23 @@ public class GameAI
     	
     	if(o.contains("redLight")){
     		Consult.setpowerup(player.x,player.y);
+    		standingInPowerUp = true;
+    	} else {
+    		standingInPowerUp = false;
     	}
     	
-    	if(o.contains("enemy#5")/*....*/){
+    	if(o.contains("enemy#5")||o.contains("enemy#4")||o.contains("enemy#3")
+    			||o.contains("enemy#2")||o.contains("enemy#1")||o.contains("enemy#0")){
     		
+    		atack = true;
+    		countAttack++;
+    		if(countAttack>10){
+    			atack=false;
+    			countAttack=0;
+    		}
+    	}
+    	else{
+    		atack = false;
     	}
     	
     	if(o.contains("steps")){
@@ -231,12 +260,12 @@ public class GameAI
      */
     public void GetObservationsClean()
     {
-    	System.out.println("OBSERVA CLEAN");
+//    	System.out.println("OBSERVA CLEAN");
         Consult.notbrisa(player.x,player.y);
         Consult.notflash(player.x, player.y);
         Consult.setvisitado(player.x, player.y);
         Consult.updateModified();
-        Consult.updateModified();
+//        Consult.updateModified();
         //Consult.printModified();
     }
 
@@ -247,19 +276,71 @@ public class GameAI
     public String GetDecision()
     {	
     	
+    	if(gold){
+    		timeToGold++;
+    	}
     	for(int i=0; i<34;i++){
-			System.out.println();
+			
 			for(int j=0; j<59; j++){
 				System.out.print(mapaMental[i][j]+ " ");
 			}
+			System.out.println();
 		}
     	
+//    	for(Gold g: this.ourosConhecidos){
+//    		g.update();
+//    		if(g.hasRespawned(MAX_TIME)){
+//    			System.out.println("VOLTOOOOOOOOOOOOOOOOOOOOO");
+//    			toCollect.add(g);
+//    			mapaMental[player.y][player.x] = 'o';
+//    			colectingGold = true;
+//    		}
+//    	}
 
     	String direcao = tradurre_direzione();
-		System.out.println(direcao);
-		System.out.println("x:"+player.x);
+//		System.out.println(direcao);
+//		System.out.println("x:"+player.x);
 		String sugestion = Consult.sugestao(player.x, player.y, tradurre_direzione());
-    	
+		
+		// OURO
+		if(sugestion.equals(ActionEnum.pegar_ouro.toString())){
+//			boolean flag = false;
+//			// Ve se o ouro ja existe
+//			for(Gold g:this.ourosConhecidos){
+//				//Se ja existe, só zera o timer
+//				if (g.x==player.x && g.y==player.y){
+//					g.zeroTime();
+//					flag = true;
+//					break;
+//				}
+//			}
+//			Gold toRemove=null;
+//			for(Gold g:this.toCollect){
+//				//Se ja existe tira
+//				if (g.x==player.x && g.y==player.y){
+//					toRemove = g;
+//					break;
+//				}
+//			}
+//			toCollect.remove(toRemove);
+//			if(!flag){
+//				// Track o ouro se ja nao existia
+//				this.ourosConhecidos.add(new Gold(player.x,player.y));
+//			}		
+//			
+			// Tira ouro do mapa
+//			System.out.println("TIRAR O OURO------------------");
+//			mapaMental[player.y][player.x] = '.';
+//			if(!goldExists()){
+//				colectingGold = false;
+//			}
+			
+			gold = true;
+			timeToGold = 0;
+			
+			return sugestion;
+		}
+    	// ALERTA
 		if(alert){
 			
 			if(sugestion.equals(ActionEnum.pegar_ouro.toString()) || sugestion.equals(ActionEnum.pegar_powerup.toString())){
@@ -272,7 +353,7 @@ public class GameAI
 			
 			else{
 			
-				System.out.println("PARTIU ASTAR");
+				System.out.println("PARTIU ASTAR FUGA");
 				
 				AStar busca = new AStar();
 				
@@ -291,8 +372,18 @@ public class GameAI
 			
 		}
 		
+		if(sugestion.equals(ActionEnum.pegar_powerup.toString())){
+			System.out.println("POWERUPPP");
+			return sugestion;
+		}
+		
+		if(atack){
+			return ActionEnum.atacar.toString();
+		}
     	
     	if(energy<HealthyThreshold){
+    		
+    		
     		
     		if(Consult.haspowerUp()){
     			AStar busca = new AStar();
@@ -303,19 +394,84 @@ public class GameAI
     			busca.setMapa(mapaMental);
     		
 	    		ArrayList<Action> comandos = busca.findPath(player.x, player.y, busca.DtoInt(tradurre_direzione()));
+				System.out.println("HELP");
+//				System.out.println("ASTAR:" + comandos.get(0).getAction().toString());
 				
-				System.out.println("ASTAR:" + comandos.get(0).getAction().toString());
-				
-				return comandos.get(0).getAction().toString();
-    		}
+				if(comandos.isEmpty()){
+					if(standingInPowerUp){
+						return ActionEnum.pegar_powerup.toString();
+					} else {
+						if(shootedRecently){
+							shootedRecently=false;
+							return ActionEnum.virar_esquerda.toString();
+						} else {
+							shootedRecently = true;
+							return ActionEnum.atacar.toString();
+						}
+					}
+				}else{				
+					return comandos.get(0).getAction().toString();
+				}
+			}
     		
     	}
     	
     	
-    	
-    	if(searchingGold){
+    	if(timeToGold>MAX_TIME){
     		
-    		System.out.println("ANTES IF "+sugestion);
+//    		if(!goldInLine){
+//    			
+//    		}
+    		System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+//    		System.out.println(toCollect.toString());
+    		// Voltando para o ouro
+    		AStar busca = new AStar();
+    		
+    		char mapaMentalComOuro[][] = new char[lim_Y][lim_X];
+    		for(int i=0;i<lim_Y;i++){
+    			for(int j=0;j<lim_X;j++){
+    				mapaMentalComOuro[i][j] = mapaMental[i][j];
+    			}
+    		}
+    		for(Gold g:toCollect){
+    			System.out.println("TEM OURO");
+    			mapaMentalComOuro[g.y][g.x]='o';
+    		}
+    		
+    		busca.setC('o');
+    		busca.setLimX(lim_X);
+    		busca.setLimY(lim_Y);
+    		busca.setMapa(mapaMental);
+    		
+    		ArrayList<Action> comandos = busca.findPath(player.x, player.y, busca.DtoInt(tradurre_direzione()));
+    		
+    		if(comandos.isEmpty()){
+    			// Estou no ouro ficticio
+//    			for(Gold g: this.ourosConhecidos){
+//    				if(g.x ==player.x && g.y == player.y){
+//    					// Achei o ouro trackeado que eu estou
+//    					g.zeroTime();
+//    					mapaMental[player.y][player.x] = '.';
+//    					if(!goldExists()){
+//    						colectingGold = false;
+//    					}
+//    				}
+//    			}
+    			
+    			timeToGold = 0;
+    		}
+    		else{
+    			String s = 	comandos.get(0).getAction().toString();
+        		System.out.println("Voltando pro OURO: "+s);
+        		return s;
+    		}
+    		
+    		
+    	}
+    	
+    	if(searchingGold) { 
+    		
+//    		System.out.println("ANTES IF "+sugestion);
     		
     		if(sugestion.equals(ActionEnum.andar.toString()) || sugestion.equals(ActionEnum.virar_direita.toString())
     												|| sugestion.equals(ActionEnum.virar_esquerda.toString())
@@ -325,6 +481,9 @@ public class GameAI
     			
     			System.out.println(sugestion);
     			return sugestion;
+    		}
+    		else if(sugestion.equals("coletar_ouros")){
+    			timeToGold = MAX_TIME+1;
     		}
     		else if(sugestion.equals(ActionEnum.astar_safe.toString())){
     			
@@ -339,13 +498,13 @@ public class GameAI
     			
     			ArrayList<Action> comandos = busca.findPath(player.x, player.y, busca.DtoInt(tradurre_direzione()));
     			
-    			System.out.println("ASTAR:" + comandos.get(0).getAction().toString());
+//    			System.out.println("ASTAR:" + comandos.get(0).getAction().toString());
     			
     			return comandos.get(0).getAction().toString();
     			
     			
     		}
-    	}
+    	} 
     	
     	
     	
@@ -373,4 +532,16 @@ public class GameAI
 //
     		return "";
     }
+
+	private boolean goldExists() {
+		// TODO Auto-generated method stub
+		for(int i=0;i<lim_Y-1;i++){
+			for(int j=0;j<lim_X-1;j++){
+				if(mapaMental[i][j]=='o'){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

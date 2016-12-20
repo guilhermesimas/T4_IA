@@ -64,36 +64,36 @@ public class AStar {
 			 * Portanto eu só preciso não expandir o currentBest caso ele seja de fato o melhor.
 			 */
 			
-			System.out.println("X = " + borders.get(0).getX() + " Y = " + borders.get(0).getY());
+//			System.out.println("X = " + borders.get(0).getX() + " Y = " + borders.get(0).getY());
 			
 			
 			for(Node n:borders){
 				/*
 				 * Encontra o novo currentBest
 				 */
-				System.out.println("borders");
+//				System.out.println("borders");
 				
-				System.out.println("Node X= " + n.getX() + " Y= " + n.getY() + "Custo: " + (n.getCost()+calc_heuristica(n.getX(),n.getY())));
+//				System.out.println("Node X= " + n.getX() + " Y= " + n.getY() + "Custo: " + (n.getCost()+calc_heuristica(n.getX(),n.getY())));
 				
 				if(n.getCost()+calc_heuristica(n.getX(),n.getY())<minCost){
 					minCost = n.getCost()+calc_heuristica(n.getX(),n.getY());
 					currentBest = n;
 				}
 				
-				System.out.println("custo mínimo: " + minCost);
+//				System.out.println("custo mínimo: " + minCost);
 			}
 			if(currentBest.isSafe(safe)){
-				System.out.println("ASTAR DONE");
+//				System.out.println("ASTAR DONE");
 				return currentBest.getCommands();
 			}
 			borders.remove(currentBest);
 			expand(currentBest);
 			
 			
-			System.out.println("CurrentBest:"+currentBest.getX()+","+currentBest.getY());
+//			System.out.println("CurrentBest:"+currentBest.getX()+","+currentBest.getY());
 		}
 		//return toAction(currentBest.getCommands());
-		System.out.println("BORDERS EMPTY");
+//		System.out.println("BORDERS EMPTY");
 		return null;
 	}
 	/**
@@ -105,7 +105,7 @@ public class AStar {
 		for(int i=0;i<limY;i++){
 			for(int j=0;j<limX;j++){
 				if(mapa[i][j]==c){
-					System.out.println("adding: X = "+ (j) +"Y = " + (i));
+//					System.out.println("adding: X = "+ (j) +"Y = " + (i));
 					safe.add(new Node(j,i,0));
 				}
 			}

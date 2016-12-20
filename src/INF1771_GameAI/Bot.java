@@ -12,7 +12,7 @@ import INF1771_GameClient.Socket.*;
 public class Bot implements Runnable {
 
 	private String name = "SEPUKU BOT";
-	private String host = "atari.icad.puc-rio.br";
+	private String host = "139.82.2.67";
 
 	HandleClient client = new HandleClient();
 	Map<Long, PlayerInfo> playerList = new HashMap<Long, PlayerInfo>();
@@ -29,7 +29,7 @@ public class Bot implements Runnable {
 	List<String> msg = new ArrayList<String>();
 	double msgSeconds = 0;
 	double printmapamental = 0;
-	int timer_interval = 1000;
+	int timer_interval = 100;
 
 	public Bot() {
 		// Set command listener to process commands received from server
@@ -61,6 +61,7 @@ public class Bot implements Runnable {
 								else
 									gameAi.GetObservationsClean();
 
+								ready = true;
 							} else if (cmd[0].equals("s")) {
 								if (cmd.length > 1) {
 									gameAi.SetStatus(Integer.parseInt(cmd[1]), Integer.parseInt(cmd[2]), cmd[3], cmd[4],
@@ -187,6 +188,7 @@ public class Bot implements Runnable {
 				if (client.connected) {
 					System.out.println("Connected");
 					client.sendName(name);
+					client.sendColor(Color.WHITE);
 					client.sendRequestGameStatus();
 					client.sendRequestUserStatus();
 					client.sendRequestObservation();
@@ -247,7 +249,13 @@ public class Bot implements Runnable {
 	/**
 	 * Execute some decision
 	 */
+	boolean ready = true;
+
 	private void DoDecision() {
+		
+		if(ready){
+			ready = false;
+		
 		String decision = gameAi.GetDecision();
 
 		if (decision.equals("virar_direita"))
@@ -269,7 +277,7 @@ public class Bot implements Runnable {
 
 		client.sendRequestUserStatus();
 		client.sendRequestObservation();
-
+		}
 	}
 
 	/**

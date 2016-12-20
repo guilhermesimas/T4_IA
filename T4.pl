@@ -146,7 +146,7 @@ sugestao(X,Y,_,R):-
     
 sugestao(X,Y,_,R):- 
     powerup(X,Y),
-    retract(ouro(X,Y)),
+    retract(powerup(X,Y)),
     R=pegar_powerup,
     !.
 

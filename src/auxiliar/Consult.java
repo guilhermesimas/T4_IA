@@ -369,8 +369,12 @@ public class Consult {
 			   int y = solution[i].get("Y").intValue();
 			   String c = solution[i].get("S").toString().trim();
 //			   System.out.println("Modified: "+x+" "+y+" "+c);
+//			   if(toChar(c)=='o'){
+//				   System.out.println("AQUIIIII");
+//				   
+//			   }else{
 			   GameAI.mapaMental[y][x] = toChar(c);
-			  
+//			   }
 		   }
 
 		 }	
